@@ -18,17 +18,16 @@ class CategoriaController extends Controller
     }
 
     public function TestConectividad(){
+        //prueba de ws
         return response()->json([
             'mensaje' => 'El servicio se encuentra en linea'
         ],200);
     }
 
     public function CrearCuenta(Request $request){
-        $request->id_coso = 3;
-
+        //guardar cuenta
         return response()->json([
-            'mensaje' => 'El servicio se encuentra en linea',
-            'request' => $request
+            'mensaje' => 'La cuenta ha sido creada correctamente'
         ],200);
     }
 
