@@ -8,6 +8,13 @@ use Illuminate\Support\Facades\Validator;
 
 class AgricultorController extends Controller
 {
+    public function testConectividad(Request $request)
+    {
+        return response()->json([
+            'mensaje' => 'Servicio en linea'
+        ], 200);
+    }
+
     public function crearCuenta(Request $request)
     {
         try {
