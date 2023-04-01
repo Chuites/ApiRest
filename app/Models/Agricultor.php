@@ -10,4 +10,5 @@ class Agricultor extends Model
     use HasFactory;
     protected $table = 'agricultor';
     protected $fillable = ['nombre','direccion','telefono','dpi'];
+    public $timestamps = false;
 }
