@@ -2,13 +2,26 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class Agricultor extends Model
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Tymon\JWTAuth\Contracts\JWTSubject;
+
+class Agricultor extends Authenticatable implements JWTSubject
 {
-    use HasFactory;
-    protected $table = 'agricultor';
-    protected $fillable = ['nombre','direccion','telefono','dpi'];
+    use HasApiTokens, HasFactory, Notifiable;
+
     public $timestamps = false;
+    protected $table = 'agricultor';
+    protected $fillable = ['id_agricultor','nombre','direccion','telefono','dpi'];
+
+    public function getJWTIdentifier(){
+        return $this->getKey();
+    }
+    public function getJWTCustomClaims(){
+        return [];
+    }
 }
+

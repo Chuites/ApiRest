@@ -285,6 +285,8 @@ return [
 
         'auth' => Tymon\JWTAuth\Providers\Auth\Illuminate::class,
 
+        'user' => 'App\Models\Agricultor',
+
         /*
         |--------------------------------------------------------------------------
         | Storage Provider

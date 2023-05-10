@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Agricultor;
+use App\Models\Piloto;
+use App\Models\Transporte;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -45,8 +47,14 @@ class AgricultorController extends Controller
                 $agricultor->nit = $request->nit;
 
                 if($agricultor->save()){
+                    $id_cuenta = Agricultor::where('dpi', $request->dpi)
+                    ->where('nit', $request->nit)
+                    ->where('nombre', $request->nombre)
+                    ->value('id_agricultor');
+
                     return response()->json([
-                        'mensaje' => 'La cuenta se ha creado correctamente'
+                        'mensaje' => 'La cuenta se ha creado correctamente',
+                        'id_cuenta' => $id_cuenta
                     ],200);
                 }
             }
@@ -99,10 +107,27 @@ class AgricultorController extends Controller
             if ($validator->fails()) {
                 return response()->json($validator->errors()->all());
             }else{
-                //buscar id, verficar si existe y si esta activo
-                return response()->json([
-                    'mensaje' => 'El piloto se encuentra activo'
-                ],200);
+                $piloto = Piloto::where('dpi',$request->dpi)->get();
+                $tamaño = count($piloto);
+                //Si existe
+                if($tamaño != 0){
+                    //Si existe y se encuentra activo
+                    if($piloto[0]->id_estado_piloto == 24){
+                        return response()->json([
+                            'mensaje' => 'El piloto se encuentra activo'
+                        ],200);
+                    //Si existe y NO se encuentra activo
+                    }else{
+                        return response()->json([
+                            'mensaje' => 'El piloto no se encuentra activo'
+                        ],200);
+                    }
+                }else{
+                //Si no existe
+                    return response()->json([
+                        'mensaje' => 'El piloto no se encuentra registrado'
+                    ],200);
+                }
             }
         } catch (Exception $e) {
             return response()->json(['error' => 'No se ha podido verificar el piloto'], 400);
@@ -119,14 +144,33 @@ class AgricultorController extends Controller
                 //Mensajes a mostrar
                 'placa.required' => 'Es requerida la placa del transporte'
             ]);
-
             if ($validator->fails()) {
-                return response()->json($validator->errors()->all(), 400);
+                return response()->json($validator->errors()->all(), 201);
             }else{
-                //buscar id, verficar si existe y si esta activo
-                return response()->json([
-                    'mensaje' => 'El tranporte se encuentra activo'
-                ],200);
+                $transporte = Transporte::where('placa',$request->placa)->get();
+                logger('Placa a validar: ',[$request->placa]);
+                $tamaño = count($transporte);
+                logger('Tamanio: ',[$tamaño]);
+                //Si existe
+                if($tamaño != 0){
+                    //Si existe y se encuentra activo
+                    logger('estado de Tranporte: ', [$transporte[0]->id_estado_transporte]);
+                    if($transporte[0]->id_estado_transporte == 4){
+                        return response()->json([
+                            'mensaje' => 'El transporte se encuentra activo'
+                        ],200);
+                    //Si existe y NO se encuentra activo
+                    }else{
+                        return response()->json([
+                            'mensaje' => 'El transporte no se encuentra activo'
+                        ],200);
+                    }
+                }else{
+                //Si no existe
+                    return response()->json([
+                        'mensaje' => 'El transporte no existe'
+                    ],200);
+                }
             }
         } catch (Exception $e) {
             return response()->json(['error' => 'No se ha podido verificar el transporte'], 400);
