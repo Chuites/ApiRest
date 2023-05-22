@@ -16,7 +16,10 @@ class AuthController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'nombre' => 'required',
+
+                'name' => 'required',
+                'email' => 'required',
+                'password' => 'required',
                 'direccion' => 'required',
                 'telefono' => 'required',
                 'dpi' => 'required',
@@ -24,7 +27,9 @@ class AuthController extends Controller
             ],
             [
                 //Mensajes a mostrar
-                'nombre.required' => 'Es requerida la informacion de nombre',
+                'name.required' => 'Es requerida la informacion de nombre',
+                'email.required' => 'Es requerida la informacion de nombre',
+                'password.required' => 'Es requerida la informacion de nombre',
                 'direccion.required' => 'Es requerida la informacion de direccion',
                 'telefono.required' => 'Es requerida la informacion de telefono',
                 'dpi.required' => 'Es requerida la informacion de dpi',
@@ -34,25 +39,21 @@ class AuthController extends Controller
             if ($validator->fails()) {
                 return response()->json($validator->errors()->all());
             }else{
-                $agricultor = new Agricultor();
-                $agricultor->nombre = $request->nombre;
-                $agricultor->direccion = $request->direccion;
-                $agricultor->telefono = $request->telefono;
-                $agricultor->dpi = $request->dpi;
-                $agricultor->nit = $request->nit;
-                if($agricultor->save()){
-                    $id_cuenta = Agricultor::where('dpi', $request->dpi)
-                    ->where('nit', $request->nit)
-                    ->where('nombre', $request->nombre)
-                    ->value('id_agricultor');
-                    logger($agricultor);
-                    $token = JWTAuth::fromUser($agricultor);
-                    return response()->json([
-                        'mensaje' => 'La cuenta se ha creado correctamente',
-                        'id_cuenta' => $id_cuenta,
-                        'token' => $token
-                    ],200);
-                }
+                $user = User::create([
+                    'name'=> $request->name,
+                    'email'=> $request->email,
+                    'password'=> Hash::make($request->password),
+                    'direccion' => $request->direccion,
+                    'telefono' => $request->telefono,
+                    'dpi' => $request->dpi,
+                    'nit' => $request->nit,
+                ]);
+                $token = JWTAuth::fromUser($user);
+
+                return response()->json([
+                    'user'=>$user,
+                    'token'=>$token
+                ], 201);
             }
 
         } catch (Exception $e) {
@@ -61,75 +62,6 @@ class AuthController extends Controller
             ],400);
         }
     }
-
-    public function loginAgricultor(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'nombre' => 'required',
-            'dpi' => 'required',
-            'id_agricultor' => 'required'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors()->all());
-        } else {
-            $nombre = $request->nombre;
-            $dpi = $request->dpi;
-            $id_agricultor = $request->id_agricultor;
-            logger('nombre: ',[$nombre]);
-            logger('dpi: ',[$dpi]);
-            logger('id_agricultor: ',[$id_agricultor]);
-
-            // Buscar al agricultor en la base de datos por nombre y dpi
-            $agricultor = Agricultor::where('dpi', $request->dpi)
-            ->get()
-            ->toArray();
-            logger('Agricultor: ',[$agricultor]);
-
-           // $agricultor = new Agricultor();
-
-                try {
-                    // Crear un token personalizado para el agricultor autenticado
-                    logger('antes de generar token');
-                    $token = JWTAuth::fromUser($agricultor);
-                    logger('despues de generar token');
-                } catch (JWTException $e) {
-                    return response()->json([
-                        'error' => 'No se pudo crear el token'
-                    ], 500);
-                }
-                return response()->json(compact('token'));
-            /* } else {
-                return response()->json([
-                    'error' => 'Credenciales inválidas'
-                ], 400);
-            } */
-        }
-    }
-
-    /* public function register(Request $request){
-        $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'email' => 'required',
-            'password' => 'required'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors()->all());
-        }else{
-            $user = User::create([
-                'name'=> $request->name,
-                'email'=> $request->email,
-                'password'=> Hash::make($request->password),
-            ]);
-            $token = JWTAuth::fromUser($user);
-
-            return response()->json([
-                'user'=>$user,
-                'token'=>$token
-            ], 201);
-        }
-    } */
 
     public function login(Request $request){
         $validator = Validator::make($request->all(), [
@@ -152,7 +84,9 @@ class AuthController extends Controller
                     'error' => 'Token Invalido'
                 ], 500);
             }
-            return response()->json(compact('token'));
+            $id_usuario = User::where('email', $request->email)->first();
+            $id = $id_usuario->id;
+            return response()->json(compact('token','id'));
         }
     }
 

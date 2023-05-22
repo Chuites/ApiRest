@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\AuthController;
@@ -18,6 +17,9 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('confirmarTransporte','App\Http\Controllers\AgricultorController@confirmarTransporte');
     Route::post('envioCargamento','App\Http\Controllers\AgricultorController@envioCargamento');
     Route::post('estadoCargamento','App\Http\Controllers\AgricultorController@estadoCargamento');
+    Route::post('listadoCargamentos','App\Http\Controllers\AgricultorController@listadoCargamentos');
+    Route::post('recibirParcialidad','App\Http\Controllers\AgricultorController@recibirParcialidad');
+
 });
 
 /* //Rutas de Agricultor
