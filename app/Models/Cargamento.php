@@ -10,4 +10,5 @@ class Cargamento extends Model
     use HasFactory;
     protected $table = 'cargamento';
     public $timestamps = false;
+    protected $primaryKey = 'id_cargamento';
 }

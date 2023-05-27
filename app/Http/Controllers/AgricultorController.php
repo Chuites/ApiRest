@@ -20,6 +20,35 @@ class AgricultorController extends Controller
         ], 200);
     }
 
+    public function infoPesoParcialidad(Request $request)
+    {
+        $parcialidad = Parcialidades::select('piloto.dpi', 'piloto.nombre_completo', 'estado_piloto.justificacion', 'transporte.placa', 'transporte.marca', 'transporte.color', 'estado_transporte.justificacion as justificacion2', 'parcialidades.id_parcialidad', 'parcialidades.peso', 'parcialidades.peso_certificado')
+            ->join('cargamento', 'parcialidades.id_cargamento', '=', 'cargamento.id_cargamento')
+            ->join('piloto', 'cargamento.id_piloto', '=', 'piloto.id_piloto')
+            ->join('estado_piloto', 'piloto.id_estado_piloto', '=', 'estado_piloto.id_estado_piloto')
+            ->join('transporte', 'cargamento.id_transporte', '=', 'transporte.id_transporte')
+            ->join('estado_transporte', 'transporte.id_estado_transporte', '=', 'estado_transporte.id_estado_transporte')
+            ->where('parcialidades.id_parcialidad', $request->id_parcialidad)
+            ->first();
+
+        return response()->json($parcialidad, 200);
+    }
+
+    public function infoParcialidad(Request $request)
+    {
+        $parcialidad = Parcialidades::select('piloto.dpi', 'piloto.nombre_completo', 'estado_piloto.justificacion', 'transporte.placa', 'transporte.marca', 'transporte.color', 'estado_transporte.justificacion as justificacion2')
+            ->join('cargamento', 'parcialidades.id_cargamento', '=', 'cargamento.id_cargamento')
+            ->join('piloto', 'cargamento.id_piloto', '=', 'piloto.id_piloto')
+            ->join('estado_piloto', 'piloto.id_estado_piloto', '=', 'estado_piloto.id_estado_piloto')
+            ->join('transporte', 'cargamento.id_transporte', '=', 'transporte.id_transporte')
+            ->join('estado_transporte', 'transporte.id_estado_transporte', '=', 'estado_transporte.id_estado_transporte')
+            ->where('cargamento.id_cargamento', $request->id_cargamento)
+            ->latest('parcialidades.id_parcialidad')
+            ->first();
+
+        return response()->json($parcialidad, 200);
+    }
+
     public function crearCuenta(Request $request)
     {
         try {
@@ -227,18 +256,31 @@ class AgricultorController extends Controller
                 $tamaño_transporte = count($transporte);
                 $tamaño_agricultor = count($agricultor);
                 $tamaño_piloto = count($piloto);
-                logger($tamaño_transporte);
-                logger($tamaño_agricultor);
-                logger($tamaño_piloto);
                 //Si existe
                 if($tamaño_transporte != 0){
                     //Si existe y se encuentra activo
                     if($transporte[0]->id_estado_transporte == 4){
                         //Se almacena el dato para luego enviarlo en la respuesta
                         $id_transporte = $transporte[0]->id_transporte;
-                        $data['transporte'] = [
+                        $data = [
                             'transporte' => 'El transporte se encuentra activo'
                         ];
+                        $cargamentos = Cargamento::where('id_transporte', $id_transporte)->exists();
+                        if($cargamentos){
+                            $valores_estado = [4, 14, 24, 34, 44]; // Array con los valores a evaluar
+                            $cargamentos = Cargamento::where('id_transporte', $id_transporte)
+                                                    ->whereIn('id_estado_cargamento', $valores_estado)
+                                                    ->exists();
+                            if($cargamentos){
+                                //El transporte aun se encuentra en otro cargamento
+                                $data = [
+                                    'transporte' => 'El transporte se encuentra en un cargamento que aun esta en proceso'
+                                ];
+                                return response()->json($data, 200);
+                            }
+                        }else{
+
+                        }
                     //Si existe y NO se encuentra activo
                     }else{
                         $data = [
@@ -257,7 +299,7 @@ class AgricultorController extends Controller
                     //Si existe y se encuentra activo
                     if($agricultor[0]->id_estado_agricultor == 4){
                         //Se almacena el dato para luego enviarlo en la respuesta
-                        $data['agricultor'] = [
+                        $data = [
                             'agricultor' => 'El agricultor se encuentra activo'
                         ];
                     //Si existe y NO se encuentra activo
@@ -280,7 +322,7 @@ class AgricultorController extends Controller
                     if($piloto[0]->id_estado_piloto == 24){
                         //Se almacena el dato para luego enviarlo en la respuesta
                         $id_piloto = $piloto[0]->id_piloto;
-                        $data['piloto'] = [
+                        $data = [
                             'piloto' => 'El piloto se encuentra activo'
                         ];
                     //Si existe y NO se encuentra activo
@@ -309,38 +351,15 @@ class AgricultorController extends Controller
                     $cargamento->parcialidades = $request->parcialidades;
                     $cargamento->id_estado_cargamento = 4;
                     $cargamento->save();
-                    logger('intenta almacenar');
                 }
-                logger('respuesta', $data);
+                $data = [
+                    'piloto' => 'El cargamento se ha creado correctamente'
+                ];
                 return response()->json($data,200);
 
             }
         } catch (Exception $e) {
             return response()->json($data, 400);
-        }
-    }
-
-    public function estadoCargamento(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                'id_cargamento' => 'required',
-            ],
-            [
-                //Mensajes a mostrar
-                'id_cargamento.required' => 'Es requerido el numero de cargamento'
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json($validator->errors()->all(), 400);
-            }else{
-                //buscar id, verficar si existe y si esta activo
-                return response()->json([
-                    'mensaje' => 'El cargamento ha ingresado a Beneficio'
-                ],200);
-            }
-        } catch (Exception $e) {
-            return response()->json(['error' => 'No se ha podido encontrar el estado del cargamento'], 400);
         }
     }
 
@@ -389,6 +408,7 @@ class AgricultorController extends Controller
                                 $parcialidad = new Parcialidades();
                                 $parcialidad->id_cargamento = $request->id_cargamento;
                                 $parcialidad->peso = $request->peso_parcialidad;
+                                $parcialidad->id_estado_pesaje = 4;
                                 if($parcialidad->save()){
                                     $data = [
                                         'mensaje' => 'Parcialidad registrada correctamente, el cargamento ha sido completado.'
@@ -405,6 +425,7 @@ class AgricultorController extends Controller
                             $parcialidad = new Parcialidades();
                             $parcialidad->id_cargamento = $request->id_cargamento;
                             $parcialidad->peso = $request->peso_parcialidad;
+                            $parcialidad->id_estado_pesaje = 4;
                             if($parcialidad->save()){
                                 $data = [
                                     'mensaje' => 'Parcialidad registrada correctamente'
@@ -432,7 +453,12 @@ class AgricultorController extends Controller
                         $parcialidad = new Parcialidades();
                         $parcialidad->id_cargamento = $request->id_cargamento;
                         $parcialidad->peso = $request->peso_parcialidad;
+                        $parcialidad->id_estado_pesaje = 4;
                         if($parcialidad->save()){
+
+                            $cargamento = Cargamento::where('id_cargamento', $request->id_cargamento)->first();
+                            $cargamento->id_estado_cargamento = 14;
+                            $cargamento->save();
                             $data = [
                                 'mensaje' => 'Parcialidad registrada correctamente'
                             ];
@@ -452,14 +478,18 @@ class AgricultorController extends Controller
                 }else{
                     if($request->peso_parcialidad > $peso_total){
                         $data = [
-                            'mensaje' => 'El cargamento ya ha sido completado'
+                            'mensaje' => 'El peso de la parcialidad no puede ser mayor al peso total del cargamento'
                         ];
                         return response()->json($data, 200);
                     }else{
                         $parcialidad = new Parcialidades();
                         $parcialidad->id_cargamento = $request->id_cargamento;
                         $parcialidad->peso = $request->peso_parcialidad;
+                        $parcialidad->id_estado_pesaje = 4;
                         if($parcialidad->save()){
+                            $cargamento = Cargamento::where('id_cargamento', $request->id_cargamento)->first();
+                            $cargamento->id_estado_cargamento = 14;
+                            $cargamento->save();
                             $data = [
                                 'mensaje' => 'Parcialidad registrada correctamente'
                             ];
@@ -490,6 +520,58 @@ class AgricultorController extends Controller
         }
     }
 
+    public function certificarPesoParcialidad(Request $request)
+    {
+        $id_parcialidad = $request->id_parcialidad;
+        $peso_certificado = $request->peso_certificado;
+
+        $parcialidad = Parcialidades::where('id_parcialidad', $id_parcialidad)->first();
+
+        if ($parcialidad) {
+            $parcialidad->peso_certificado = $request->peso_certificado;
+            $parcialidad->id_estado_pesaje = 14;
+            logger('Antes del save');
+            if ($parcialidad->save()) {
+                $id_cargamento = $parcialidad->id_cargamento;
+                $cargamento = Cargamento::where('id_cargamento', $id_cargamento)->first();
+                $total_parcialidades = $cargamento->parcialidades;
+                $parcialidades_pesadas = Parcialidades::where('id_cargamento', $id_cargamento)
+                    ->where('id_estado_pesaje', 14)
+                    ->count();
+                logger('Total de parcialidades: '. $total_parcialidades);
+                logger('Parcialidades_Pesadas: '.$parcialidades_pesadas);
+                logger('Id de Cargamento: '. $id_cargamento);
+                if ($total_parcialidades == $parcialidades_pesadas) {
+                    $cargamento = Cargamento::where('id_cargamento', $id_cargamento)->first();
+                    $cargamento->id_estado_cargamento = 44;
+                    $cargamento->save();
+                    logger('Despues de cambiar estado de cargamento');
+                }else{
+                    $cargamento = Cargamento::where('id_cargamento', $id_cargamento)->first();
+                    $cargamento->id_estado_cargamento = 24;
+                    $cargamento->save();
+                }
+                logger('Después del SAVE');
+                $parcialidades = Parcialidades::select('parcialidades.id_parcialidad', 'parcialidades.peso', 'transporte.placa', 'transporte.marca', 'transporte.color')
+                    ->join('cargamento', 'parcialidades.id_cargamento', '=', 'cargamento.id_cargamento')
+                    ->join('transporte', 'cargamento.id_transporte', '=', 'transporte.id_transporte')
+                    ->where('parcialidades.id_parcialidad', $request->id_parcialidad)
+                    ->get();
+                return response()->json($parcialidades, 200);
+            }
+        }
+    }
+
+    public function listadoParcialidades(Request $request)
+    {
+        $parcialidades = Parcialidades::select('parcialidades.id_parcialidad', 'parcialidades.peso', 'transporte.placa', 'transporte.marca', 'transporte.color')
+            ->join('cargamento', 'parcialidades.id_cargamento', '=', 'cargamento.id_cargamento')
+            ->join('transporte', 'cargamento.id_transporte', '=', 'transporte.id_transporte')
+            ->where('parcialidades.id_estado_pesaje', 4)
+            ->get();
+
+        return response()->json($parcialidades, 200);
+    }
 
     public function listadoCargamentos(Request $request)
     {
@@ -539,6 +621,21 @@ class AgricultorController extends Controller
         return $agricultor;
     }
 
+
+    public function estadoCargamento(Request $request){
+        $cargamento = Cargamento::
+        join('estado_cargamento', 'cargamento.id_estado_cargamento', 'estado_cargamento.id_estado_cargamento')
+        ->where('id_cargamento', $request->id_cargamento)
+        ->first();
+        if($cargamento){
+            return response()->json($cargamento, 200);
+        }else{
+            $data = [
+                'mensaje' => 'El cargamento no existe'
+            ];
+            return response()->json($data, 200);
+        }
+    }
     /**
      * Remove the specified resource from storage.
      */

@@ -18,8 +18,11 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('envioCargamento','App\Http\Controllers\AgricultorController@envioCargamento');
     Route::post('estadoCargamento','App\Http\Controllers\AgricultorController@estadoCargamento');
     Route::post('listadoCargamentos','App\Http\Controllers\AgricultorController@listadoCargamentos');
+    Route::post('listadoParcialidades','App\Http\Controllers\AgricultorController@listadoParcialidades');
     Route::post('recibirParcialidad','App\Http\Controllers\AgricultorController@recibirParcialidad');
-
+    Route::post('infoParcialidad','App\Http\Controllers\AgricultorController@infoParcialidad');
+    Route::post('infoPesoParcialidad','App\Http\Controllers\AgricultorController@infoPesoParcialidad');
+    Route::post('certificarPesoParcialidad','App\Http\Controllers\AgricultorController@certificarPesoParcialidad');
 });
 
 /* //Rutas de Agricultor

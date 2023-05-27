@@ -10,4 +10,5 @@ class Parcialidades extends Model
     use HasFactory;
     protected $table = 'parcialidades';
     public $timestamps = false;
+    protected $primaryKey = 'id_parcialidad';
 }
