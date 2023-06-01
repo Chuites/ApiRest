@@ -20,10 +20,11 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('listadoCargamentos','App\Http\Controllers\AgricultorController@listadoCargamentos');
     Route::post('listadoParcialidades','App\Http\Controllers\AgricultorController@listadoParcialidades');
     Route::post('recibirParcialidad','App\Http\Controllers\AgricultorController@recibirParcialidad');
-    Route::post('infoParcialidad','App\Http\Controllers\AgricultorController@infoParcialidad');
     Route::post('infoPesoParcialidad','App\Http\Controllers\AgricultorController@infoPesoParcialidad');
     Route::post('certificarPesoParcialidad','App\Http\Controllers\AgricultorController@certificarPesoParcialidad');
 });
+
+Route::post('infoParcialidad','App\Http\Controllers\AgricultorController@infoParcialidad');
 
 /* //Rutas de Agricultor
 Route::post('testConectividad','App\Http\Controllers\AgricultorController@testConectividad');
