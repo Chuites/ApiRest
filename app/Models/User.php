@@ -20,7 +20,8 @@ class User extends Authenticatable implements JWTSubject
         'direccion',
         'telefono',
         'dpi',
-        'nit'
+        'nit',
+        'id_estado_agricultor'
     ];
 
     public function getJWTIdentifier(){

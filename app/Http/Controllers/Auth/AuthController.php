@@ -47,6 +47,7 @@ class AuthController extends Controller
                     'telefono' => $request->telefono,
                     'dpi' => $request->dpi,
                     'nit' => $request->nit,
+                    'id_estado_agricultor' => '4'
                 ]);
                 $token = JWTAuth::fromUser($user);
 

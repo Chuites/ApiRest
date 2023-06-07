@@ -71,15 +71,18 @@ class AgricultorController extends Controller
             if ($validator->fails()) {
                 return response()->json($validator->errors()->all());
             }else{
-                $agricultor = new Agricultor();
+                logger('TEST');
+                $agricultor = new User();
                 $agricultor->nombre = $request->nombre;
                 $agricultor->direccion = $request->direccion;
                 $agricultor->telefono = $request->telefono;
                 $agricultor->dpi = $request->dpi;
                 $agricultor->nit = $request->nit;
+                $agricultor->id_estado_agricultor = 4;
+                logger($agricultor);
 
                 if($agricultor->save()){
-                    $id_cuenta = Agricultor::where('dpi', $request->dpi)
+                    $id_cuenta = User::where('dpi', $request->dpi)
                     ->where('nit', $request->nit)
                     ->where('nombre', $request->nombre)
                     ->value('id_agricultor');
@@ -228,7 +231,7 @@ class AgricultorController extends Controller
 
     public function envioCargamento(Request $request)
     {
-        try {//id_estado_transporte
+        try {
             $validator = Validator::make($request->all(), [
                 'dpi_piloto' => 'required',
                 'placa_transporte' => 'required',
@@ -248,7 +251,7 @@ class AgricultorController extends Controller
             if ($validator->fails()) {
                 return response()->json($validator->errors()->all(), 400);
             }else{
-
+                logger('DESPUES DE LA VALIDACION');
                 $data = array();
                 $transporte = Transporte::where('placa',$request->placa_transporte)->get();
                 $agricultor = User::where('id',$request->id_cuenta )->get();
@@ -342,13 +345,14 @@ class AgricultorController extends Controller
                 //Si todos existen y estan activos
                 if (($transporte[0]->id_estado_transporte == 4)&&($agricultor[0]->id_estado_agricultor == 4)&&($piloto[0]->id_estado_piloto == 24)){
                     //Se pocede a guardar los datos del envio
-                    logger('si entra a la condicion');
+                    logger('CHOMIN!!!');
                     $cargamento = new Cargamento();
                     $cargamento->id_agricultor = $request->id_cuenta;
                     $cargamento->id_transporte = $id_transporte;
                     $cargamento->id_piloto = $id_piloto;
                     $cargamento->peso = $request->peso_total;
                     $cargamento->parcialidades = $request->parcialidades;
+                    $cargamento->fh_creacion = date("Y-m-d h:i:s");
                     $cargamento->id_estado_cargamento = 4;
                     $cargamento->save();
                 }
